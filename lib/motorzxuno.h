@@ -5,6 +5,45 @@
 // Es decir 22221111 es el formato de los bits de pixel en cada byte
 
 
+// Current drawing screen. Initial value is 1 (the one which is not shown))
+unsigned int iCurrentScreen = 1;
+unsigned short screenAddress = RADAS_SCREEN_ADDR_1;
+unsigned int *currentScreen = RADAS_SCREEN_ADDR_1;
+unsigned int *theOtherScreen = RADAS_SCREEN_ADDR_0;
+
+unsigned int *radasGetCurrentScreen() {
+    return currentScreen;
+}
+
+unsigned int *radasGetTheOtherScreen() {
+    return theOtherScreen;
+}
+
+unsigned int obtenerIndicePantalla() {
+    return iCurrentScreen;
+}
+
+void radasChangeScreens() {
+
+    if ( iCurrentScreen ) {
+        port_out( 0x00FF, 1 );
+        currentScreen = RADAS_SCREEN_ADDR_0;
+        screenAddress = RADAS_SCREEN_ADDR_1;
+        theOtherScreen = RADAS_SCREEN_ADDR_1;
+        iCurrentScreen = 0;
+    }
+    else {
+        port_out( 0x00FF, 0 );
+        currentScreen = RADAS_SCREEN_ADDR_1;
+        screenAddress = RADAS_SCREEN_ADDR_0;
+        theOtherScreen = RADAS_SCREEN_ADDR_0;
+        iCurrentScreen = 1;
+    }
+
+}
+
+
+
 // Funciones:
 
 // ___________________________________________
@@ -22,10 +61,22 @@ void cls (int color)
 		rla
 		rla			;ya tenemos el color del primer pixel
 		add a, (hl)		;añadimos el color del segundo pixel
-		
-		ld hl, 16384
-		ld de, 16385
-		ld bc, 6143
+
+		ld c,a      ; me guardo A
+        ld a, (_iCurrentScreen)  ; pillo el valor de la variable
+        rra         ; veo si es 1
+        jr c, cls_usa_screen_2
+        ld hl, 16384
+        ld de, 16385
+        jp cls_continua
+
+        cls_usa_screen_2:
+        ld hl, 24576
+        ld de, 24577
+
+        cls_continua:
+		ld a,c
+		ld bc, RADAS_SCREEN_NUM_BYTES
 		ld (hl), a
 		ldir
 	#endasm
@@ -213,7 +264,20 @@ void put_sprite_x8 (unsigned char *posicion, unsigned int x, unsigned int y)
 		rrca
 		rrca		; rotamos para quedarnos con los bits altos
 		and 63		; 00111111 borramos el resto de bits
-		or 0x40		; 01000000 nos posicionamos a partir de 16384 (16384=64+0 en dos bytes)
+
+		ld c,a      ; me guardo A
+		ld a, (_iCurrentScreen)  ; pillo el valor de la variable
+		rra         ; veo si es 1
+		jr c, usa_screen_2
+
+		ld a,c      ; restauro A
+		or 0x40     ; a partir de 16384
+		jp continua
+		usa_screen_2:
+		ld a,c
+		or 0x60		; 01100000 nos posicionamos a partir de 24576 (16384=96+0 en dos bytes)
+		continua:
+
 		ld d, a		; d preparado, ya tenemos la posición en pantalla en DE
 
 		ex af,af
@@ -315,7 +379,20 @@ void get_sprite_x8 (unsigned char *posicion, unsigned int x, unsigned int y)
 		rrca
 		rrca		; rotamos para quedarnos con los bits altos
 		and 63		; 00111111 borramos el resto de bits
-		or 0x40		; 01000000 nos posicionamos a partir de 16384 (16384=64+0 en dos bytes)
+
+        ld c,a      ; me guardo A
+		ld a, (_iCurrentScreen)  ; pillo el valor de la variable
+		rra         ; veo si es 1
+		jr c, get_usa_screen_2
+
+		ld a,c      ; restauro A
+		or 0x40     ; a partir de 16384
+		jp get_continua
+		get_usa_screen_2:
+		ld a,c
+		or 0x60		; 01100000 nos posicionamos a partir de 24576 (16384=96+0 en dos bytes)
+		get_continua:
+
 		ld d, a		; d preparado, ya tenemos la posición en pantalla en DE
 
         ex af,af      ; recuperamos la X
