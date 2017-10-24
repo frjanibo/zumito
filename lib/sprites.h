@@ -4,14 +4,14 @@ extern unsigned char sprite_tile0 [];
 
 #asm
 	._sprite_tile0
-	DEFB	51, 51, 51, 51
-	DEFB	51, 51, 51, 51
-	DEFB	51, 51, 51, 51
-	DEFB	51, 51, 51, 51
-	DEFB	51, 51, 51, 51
-	DEFB	51, 51, 51, 51
-	DEFB	51, 51, 51, 51
-	DEFB	51, 51, 51, 51
+	DEFB	0x00, 0x00, 0, 0
+	DEFB	0x00, 0x99, 0x99, 0
+	DEFB	0x00, 0x98, 0x89, 0
+	DEFB	0x00, 0x90, 0x09, 0
+	DEFB	0x00, 0x90, 0x09, 0
+	DEFB	0x00, 0x98, 0x89, 0
+	DEFB	0x00, 0x99, 0x99, 0
+	DEFB	0,0,0,0
 
 #endasm
 

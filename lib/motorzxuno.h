@@ -291,10 +291,12 @@ void put_sprite_x8 (unsigned char *posicion, unsigned int x, unsigned int y)
         push bc     ; me guardo bc, que la rutina lo corrompe
         jr dibujar_linea_impar_v2
         vuelve_de_linea_impar_v2:
-        ex de,hl
-        ld bc, 60   ; añadimos 60 para escribir en la siguiente línea
-        add hl, bc
-        ex de,hl
+        ld a, 60    ; añadimos 60 para escribir en la siguiente línea
+        add a,e
+        ld e,a
+        adc a,d
+        sub e
+        ld d,a
 
         pop bc
         dec c
@@ -333,13 +335,12 @@ void put_sprite_x8 (unsigned char *posicion, unsigned int x, unsigned int y)
 		ldi
 		ldi
 
-        ; sumamos 60 a DE usando el intercambio con HL
-		push bc
-		ld bc,60
-		ex de,hl
-		add hl,bc
-		ex de,hl
-		pop bc
+        ld a, 60    ; añadimos 60 para escribir en la siguiente línea
+        add a,e
+        ld e,a
+        adc a,d
+        sub e
+        ld d,a
 
 		djnz draw
 		ret
@@ -553,8 +554,8 @@ void put_msprite_x8 (unsigned char *posicion, unsigned int x, unsigned int y)
 		while (xx>0)
 		{
 			buffer=*posicion;
-			a = (buffer&15);
-			b = (buffer&240);
+			a = (buffer&15); // 0F
+			b = (buffer&240); // F0
 			dibuja = 10*(a>0)+(b>0);
 			switch(dibuja)
 			{
