@@ -430,14 +430,16 @@ void put_letra (unsigned char *posicion, unsigned int x, unsigned int y)
 // Posiciona una letra a color con fondo transparente
 // ___________________________________________
 
-void put_mletra (unsigned char *posicion, unsigned int x, unsigned int y)
+void put_mletra (unsigned char *posicion, unsigned int x, unsigned int y, unsigned char ink, unsigned char background)
 {
 	unsigned int xx;
 	unsigned int yy=6;
-	unsigned char *pantalla=16384+x+y*64;
+	unsigned char *pantalla=( (Z_getActiveScreen()?RADAS_SCREEN_ADDR_1:RADAS_SCREEN_ADDR_0));
 	unsigned int buffer;
 	unsigned int dibuja;
 	unsigned int a,b;
+  pantalla += x;
+  pantalla += y*64;
 
 	while (yy>0)
 	{
@@ -445,15 +447,23 @@ void put_mletra (unsigned char *posicion, unsigned int x, unsigned int y)
 		while (xx>0)
 		{
 			buffer=*posicion;
-			a = (buffer&15);
-			b = (buffer&240);
-			dibuja = 10*(a>0)+(b>0);
+			a = (buffer&0x0F);
+			b = (buffer&0xF0);
+
+
+      if(a==0x0F) a=ink;
+      else if(a==0x00) a=background;
+
+      if(b==0xF0) b=ink<<4;
+      else if(b==0x00) b=background<<4;
+
+      dibuja = 10*(a>0)+(b>0);
 			switch(dibuja)
 			{
-				case 0: dibuja = *pantalla; break;
-				case 1: dibuja = b+((*pantalla)&15); break;
+				case 0: dibuja =  *pantalla; break;
+				case 1: dibuja =  b+((*pantalla)&15); break;
 				case 10: dibuja = a+((*pantalla)&240); break;
-				case 11: dibuja = buffer; break;
+				case 11: dibuja = a+b; break;
 			}
 			*pantalla=dibuja;
 			posicion++;
@@ -494,7 +504,7 @@ void print (char *texto, char x, char y)
 // Detecta si se excede la pantalla
 // ___________________________________________
 
-void mprint (char *texto, char x, char y)
+void mprint (char *texto, char x, char y, uchar ink, uchar background)
 {
   char *InicioFuente = ascii - (int)(32*12);// - 32*12;
   /* de esta forma, InicioFuente apunta 32 caracteres antes del espacio */
@@ -503,7 +513,7 @@ void mprint (char *texto, char x, char y)
   while (*texto)
   {
     InicioSprite = (*texto)*12+InicioFuente;
-    put_mletra (InicioSprite,x, y);
+    put_mletra (InicioSprite,x, y, ink, background);
     x+=2;
     // siguiente posición de carácter
     if (x>=63) {
@@ -514,4 +524,3 @@ void mprint (char *texto, char x, char y)
   }
 
 }
-
