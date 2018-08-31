@@ -43,15 +43,18 @@ void introScreenUpdate(){
         put_sprite_x8m(spr_7x4, 20, 77); // tank
 
         put_sprite_x8m(spr_2x0, 72, 44); // human 1
-        put_sprite_x8m(spr_3x0, 72, 56); // human 2
+        put_sprite_x8m(spr_3x0, 72, 55); // human 2
+        put_sprite_x8m(spr_10x2,72, 66); // power up
+        put_sprite_x8m(spr_10x4,72, 77); // speed up
 
         Z_switchScreen();
         Z_copyScreenToShadow();
-
+		
         for(i=0; i<28; i++) {
                 Z_switchScreen();
                 Z_put_sprite(logo,32,14+(26-i), 64, i);
         }
+        
         Z_copyScreenToShadow();
 
         last_step_time = millis();
@@ -77,6 +80,8 @@ void introScreenUpdate(){
 
                                 mprint("HUMAN  ",82>>1, 44+2, 9,0);
                                 mprint("HUMAN  ",82>>1, 55+2, 9,0);
+                                mprint("POWER UP",82>>1, 66+2, 9,0);
+                                mprint("SPEED UP",82>>1, 77+2, 9,0);
                                 mprint("A LOCOMALITO(TM) RETROPORT",6,90, 1,0);
 
 
@@ -88,6 +93,8 @@ void introScreenUpdate(){
 
                                 mprint("PLAYER 1",82>>1, 44+2, 9,0);
                                 mprint("PLAYER 2",82>>1, 55+2, 9,0);
+                                mprint("POWER UP",82>>1, 66+2, 9,0);
+                                mprint("SPEED UP",82>>1, 77+2, 9,0);
                                 mprint("     BY ANARKADE 2017     ",6,90, 2,0);
                         }
                         Z_exchangePaletteColors(paleta, 7,8 );

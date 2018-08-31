@@ -107,3 +107,15 @@ unsigned char* frames_egg_break[] = {spr_8x4, spr_8x5, spr_8x6, spr_8x7};
 Animation anim_egg_appear = {4, frames_egg_appear};
 Animation anim_egg_bounce = {2, frames_egg_bounce};
 Animation anim_egg_break  = {4, frames_egg_break};
+
+// Item: STAR
+unsigned char* frames_star[] = {spr_10x0,spr_10x1};
+Animation anim_star = {2, frames_star };
+
+// Item: Power UP
+unsigned char* frames_powerup[] = {spr_10x2, spr_10x3};
+Animation anim_powerup = {2, frames_powerup };
+
+// Item: SpeedUp
+unsigned char* frames_speedup[] = {spr_10x4, spr_10x5};
+Animation anim_speedup = {2, frames_speedup };

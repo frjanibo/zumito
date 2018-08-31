@@ -8,6 +8,7 @@
 #define SPRITE_DESTROY_F 0
 #define SPRITE_VISIBLE_F 1
 #define SPRITE_STATIC_F 2
+#define SPRITE_INVULNERABLE_F 3
 
 typedef struct {
 	unsigned char size;
@@ -40,6 +41,15 @@ typedef struct {
     void (*onAnimationEnds)();
 } Sprite;
 
+void __FASTCALL__ sprite_restore(Sprite*);
+
+void sprite_set_flag(Sprite* s, uchar flag, uchar value) {
+	s->flags ^= (-value ^ s->flags) & (1U << flag);
+}
+unsigned char sprite_get_flag(Sprite* s, uchar flag) {
+	return (s->flags >> flag) & 1U;
+}
+
 Sprite* Sprite_new( unsigned char x, unsigned char y ){
   Sprite* s = malloc( sizeof(Sprite) );
   s->id=0;
@@ -65,17 +75,19 @@ Sprite* Sprite_new( unsigned char x, unsigned char y ){
   return s;
 }
 
-void sprite_set_flag(Sprite* s, uchar flag, uchar value) {
-	s->flags ^= (-value ^ s->flags) & (1U << flag);
-}
-unsigned char sprite_get_flag(Sprite* s, uchar flag) {
-	return (s->flags >> flag) & 1U;
-}
-
 unsigned char Sprite_Collision_Rect( Sprite* a, Sprite* b) {
-  if( (a->x+8 > b->x) && ( a->x < b->x+8) ) {
+	uchar offset= 1;
+	uchar width = 6;
+	uchar height= 6;
+	unsigned char ax,ay,bx,by;
+	ax = a->x + offset;
+	bx = b->x + offset;
+	ay = a->y + offset;
+	by = b->y + offset;
+	
+  if( (ax+width > bx) && ( ax < bx+width) ) {
     // collides in X
-    if( (a->y+8 > b->y) && ( a->y < b->y+8) ) {
+    if( (ay+height > by) && ( ay < by+height) ) {
       // collides in Y
       return 1;
     }
@@ -121,7 +133,7 @@ Sprite* Sprite_CollisionList_AND( Sprite* a, struct adt_List* group, unsigned ch
   Sprite *s = adt_ListFirst( group );
 
   while(s!=NULL) {
-      if( (s->id&type)!=0 && Sprite_Collision_Rect(a,s) ) {
+      if( (s->id & type) && Sprite_Collision_Rect(a,s) ) {
         collides = s;
         break;
       }
@@ -134,10 +146,10 @@ Sprite* Sprite_CollisionList_AND( Sprite* a, struct adt_List* group, unsigned ch
 }
 void Sprite_refreshBlit( Sprite* s ){
   get_sprite_x8( s->blit_a, s->x, s->y);
-  memcpy( s->blit_b, s->blit_a, 32 );
+  memcopy( s->blit_b, s->blit_a, 32 );
 }
 
-void sprite_safe_add( Sprite s ) {
+void sprite_safe_add( Sprite* s ) {
   struct adt_List* group = Z_getSpritesList();
   struct adt_ListNode *position = group->current;
   uchar state = group->state;
@@ -146,26 +158,7 @@ void sprite_safe_add( Sprite s ) {
   group->state = state;
 }
 
-void sprite_update(Sprite *spr, unsigned char delta) {
-  spr->prev_y = spr->y;
-  spr->prev_x = spr->x;
-  spr->clock += delta;
-  spr->anim_clock += delta;
-
-    if( spr->customUpdateMethod != NULL ) spr->customUpdateMethod(spr);
-    else {
-      sprite_anim(spr,30);
-      if( sprite_get_flag(spr, SPRITE_STATIC_F)==0) sprite_move(spr);
-    }
-}
-
-uchar sprite_clock_check( Sprite s, uchar threshold ) {
-  if( s->clock < threshold ) return 1;
-  s->clock-=threshold;
-  return 0;
-}
-
-void sprite_anim( Sprite spr, unsigned char speed ) {
+void sprite_anim( Sprite* spr, unsigned char speed ) {
   if( spr->anim_clock > speed ) {
     spr->frame++;
     spr->anim_clock-=speed;
@@ -177,7 +170,8 @@ void sprite_anim( Sprite spr, unsigned char speed ) {
   }
 }
 
-void sprite_move( Sprite spr ) {
+
+void sprite_move( Sprite* spr ) {
   if( spr->speed != 0) {
     if( spr->direction == DIRECTION_UP || spr->direction==DIRECTION_DOWN ) {
       if(spr->direction == DIRECTION_UP ) spr->y -= spr->speed;
@@ -197,6 +191,26 @@ void sprite_move( Sprite spr ) {
   }
 }
 
+void sprite_update(Sprite *spr, unsigned char delta) {
+  spr->prev_y = spr->y;
+  spr->prev_x = spr->x;
+  spr->clock += delta;
+  spr->anim_clock += delta;
+
+    if( spr->customUpdateMethod != NULL ) spr->customUpdateMethod(spr);
+    else {
+      sprite_anim(spr,30);
+      if( sprite_get_flag(spr, SPRITE_STATIC_F)==0) sprite_move(spr);
+    }
+}
+
+uchar sprite_clock_check( Sprite* s, uchar threshold ) {
+  if( s->clock < threshold ) return 1;
+  s->clock-=threshold;
+  return 0;
+}
+
+
 void sprites_update( unsigned char delta ){
     struct adt_List *list = Z_getSpritesList();
     Sprite *s = adt_ListFirst( list );
@@ -214,7 +228,7 @@ void sprites_init(){
     Sprite *spr = adt_ListFirst( list );
     while( spr != NULL ){
       get_sprite_x8( spr->blit_a, spr->x, spr->y);
-      memcpy( spr->blit_b, spr->blit_a, 32 );
+      memcopy( spr->blit_b, spr->blit_a, 32 );
       spr = adt_ListNext(list);
     }
 }
@@ -248,8 +262,11 @@ void __FASTCALL__ sprites_restore(){
     struct adt_List *list = Z_getSpritesList();
     unsigned char *current_blit;
     Sprite *s = adt_ListFirst( list );
-		if(s!=NULL)
-    	do sprite_restore(s) while( s = adt_ListNext(list) );
+		if(s!=NULL) {
+    	do {
+			sprite_restore(s);
+			} while( s = adt_ListNext(list) );
+    	}
 }
 
 void __FASTCALL__ sprites_destroy(){

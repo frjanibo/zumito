@@ -31,7 +31,7 @@ void waves_update(uchar delta_time){
 
   if(ENEMIES_NUMBER > 0 || next_wave_settled==1) return;
   
-  next_wave_settled=1
+  next_wave_settled=1;
   CURRENT_WAVE++;
   srand(CURRENT_WAVE+delta_time);
   set_timeout( 2000UL, create_wave_eggs, NULL);

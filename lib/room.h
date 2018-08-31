@@ -16,6 +16,8 @@ typedef struct {
     Tile *tileset;
 } Room;
 
+Tile* Tile_new( unsigned char, unsigned char, unsigned char* );
+uchar Tile_isSolid( Tile* );
 
 Room* Room_new( unsigned char id, unsigned char width, unsigned char height){
   Room* r = malloc( sizeof(Room) );
@@ -31,24 +33,24 @@ Room_setTile( Room* r, unsigned char in, uchar flags, uchar* pixels ){
   r->tileset[in]= Tile_new( in, flags, pixels);
 }
 
-unsigned char Room_getcell( Room room, unsigned char col, unsigned char row) {
+unsigned char Room_getcell( Room* room, unsigned char col, unsigned char row) {
   unsigned char cell = room->cells[ (row*room->width>>1) + (col>>1) ];
   if( (col&1) == 0) cell = cell >> 4;
   return cell & 0x0F;
 }
 
-Tile* Room_getTileAt( Room room, unsigned char col, unsigned char row) {
+Tile* Room_getTileAt( Room* room, unsigned char col, unsigned char row) {
   unsigned char cell = Room_getcell(room,col,row);
   return room->tileset[cell];
 }
 
-uchar Room_canMoveRight(Room room, uchar x, uchar y) {
+uchar Room_canMoveRight(Room* room, uchar x, uchar y) {
   return !Tile_isSolid(Room_getTileAt(room, (x+8)>>3, y>>3 )) && !Tile_isSolid(Room_getTileAt(room, (x+8)>>3, (y+7)>>3 ));
 }
-uchar Room_canMoveLeft(Room room, uchar x, uchar y) {
+uchar Room_canMoveLeft(Room* room, uchar x, uchar y) {
   return !Tile_isSolid(Room_getTileAt(room, (x-1)>>3, y>>3 )) && !Tile_isSolid(Room_getTileAt(room, (x-1)>>3, (y+7)>>3));
 }
-uchar Room_canMove(Room r, uchar x, uchar y, uchar direction) {
+uchar Room_canMove(Room* r, uchar x, uchar y, uchar direction) {
   switch(direction) {
     case DIRECTION_RIGHT:
       return !Tile_isSolid(Room_getTileAt(r, (x+8)>>3, y>>3 )) && !Tile_isSolid(Room_getTileAt(r, (x+8)>>3, (y+7)>>3 ));

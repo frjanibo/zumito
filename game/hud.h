@@ -1,35 +1,37 @@
-// void mallinfo(uint *total, uint *largest);
-// total   = address of an integer where the total number of free bytes in the heap will be stored
-// largest = address of an integer where the size of the largest available block in the heap will be stored
-
 uint total, largest;
-unsigned char str[16];
+unsigned char str[6];
+
+void copyHud() {
+	if( Z_getActiveScreen() == 0 ){
+			memcopy(RADAS_SCREEN_ADDR_1+(64*88),RADAS_SCREEN_ADDR_0+(64*88), 64*8);
+		} else {
+			memcopy(RADAS_SCREEN_ADDR_0+(64*88),RADAS_SCREEN_ADDR_1+(64*88), 64*8);
+		}
+}
+
+void initHUD() {
+	put_sprite_x8m(spr_10x6,0, 88);
+}
 
 void updateHUD(){
-        unsigned char outputString[16];
+		char i=0;
+        unsigned char outputString[8];
 
         mallinfo( &total, &largest );
 
-        sprintf( outputString, "%05lu", score );
-        mprint(outputString,0,90, 1, 6);
+		//put_sprite_x8m(spr_10x6,0, 88);
+		mprint( itoa_10(player->life, str,2), 4,90, 2, 1);
+        mprint( itoa_10(score,str,5) ,8,90, 9, 1);
         
-        sprintf( outputString, "%02u", lives  );
-        print( outputString, 12, 90);
-
-        sprintf( outputString, "%02u", ENEMIES_NUMBER );
-        mprint(outputString,16,90, 1, 6);
-
-        sprintf( outputString, "SPR %02u", adt_ListCount( Z_getSpritesList() ) );
-        print( outputString, 24, 90);
-
-        sprintf( outputString, "W %02u", CURRENT_WAVE );
-        print( outputString, 36, 90);
         
-        //sprintf( outputString, "M %05u", total );
-        utoa( 123, str, 10);
-        print( str, 46, 90);
+        //print( itoa_10(adt_ListCount(Z_getSpritesList()),str,2), 24, 90);
+        mprint( "WAVE", 48,90, 6,1 );
+        mprint( itoa_10(CURRENT_WAVE,str,2), 60, 90, 6,1);
+        //print( itoa_10( total, str,5), 44, 90);
         
-        memcpy(RADAS_SCREEN_ADDR_1+(64*88),RADAS_SCREEN_ADDR_0+(64*88), 64*8);
+        copyHud();
         
-        set_timeout( 500UL, updateHUD, NULL );
+        set_timeout( 400UL, updateHUD, NULL );
 }
+
+

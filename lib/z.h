@@ -1,3 +1,8 @@
+#define true (1)
+#define false (0)
+#ifndef NULL
+#define NULL ((void*)0)
+#endif
 
 #define RADAS_SCREEN_ADDR_0 ( ( unsigned int * ) 0x4000U )
 #define RADAS_SCREEN_ADDR_1 ( ( unsigned int * ) 0x6000U )
@@ -7,7 +12,7 @@
 #define RADAS_SIZE_X2 ( RADAS_SIZE_X >> 1 )
 #define RADAS_SCREEN_NUM_BYTES 6144
 
-unsigned long last_step_time = 0UL;
+unsigned int last_step_time = 0UL;
 unsigned int delta_time = 0UL;
 
 // Current drawing screen. Initial value is 1 (the one which is not shown))
@@ -23,12 +28,12 @@ void Z_setPalette( unsigned char* );
 void Z_turboOn();
 void Z_radastanModeOn();
 
-unsigned long __FASTCALL__ millis();
+unsigned int __FASTCALL__ millis();
 void Z_setActiveScreen( unsigned char );
 void Z_getActiveScreen();
 void Z_switchScreen();
-unsigned int* Z_getWorkingScreenAddress();
-unsigned int* Z_getVisibleScreenAddress();
+unsigned int __FASTCALL__ *Z_getWorkingScreenAddress();
+unsigned int __FASTCALL__ *Z_getVisibleScreenAddress();
 void Z_copyScreenToShadow();
 
 void put_sprite_x8 (unsigned char* posicion, unsigned char x, unsigned char y);
@@ -36,6 +41,7 @@ void put_sprite_x8_even (unsigned char *posicion, unsigned char x, unsigned char
 void put_sprite_x8m (unsigned char *posicion, unsigned char x, unsigned char y);
 void get_sprite_x8 (unsigned char *posicion, unsigned char x, unsigned char y);
 void fastcls (int color);
+void memcopy( unsigned char *, unsigned char *, unsigned int);
 
 
 #include "lib/timeout.h"
@@ -44,3 +50,4 @@ void fastcls (int color);
 #include "lib/screen.c"
 #include "lib/ascii.h"
 #include "lib/z.c"
+

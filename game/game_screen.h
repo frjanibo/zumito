@@ -6,24 +6,20 @@ void gameScreenUpdate(){
                 last_step_time = millis();
                 sprites_update( (unsigned char) delta_time ); // call update method on every sprite
                 Z_Render();
-                //waves_update(delta_time);
+                waves_update(delta_time);
         }
 }
 
 void gameScreenEnter(){
   unsigned char i,j, cell;
-
-  Z_setPalette( paleta );
-  Z_setPaletteOffset( PAL_TILESET_Rocks, 10 );
   fastcls(1);
   
   CURRENT_WAVE=0;
   ENEMIES_NUMBER=0;
   
   initPlayerData();
-  sprite_safe_add( player);
+  sprite_safe_add( player );
 
-  iCurrentScreen = 0;
   for(j=0; j<11; j++) {
           for(i=0; i < 16; i++) {
                   cell = Room_getcell(room, i, j);
@@ -31,14 +27,17 @@ void gameScreenEnter(){
           }
   }
   
-  updateHUD(); // esto se llama cada 1 seg, el timeout lo pone la propia funcion
-
-  memcpy(RADAS_SCREEN_ADDR_1,RADAS_SCREEN_ADDR_0, RADAS_SCREEN_NUM_BYTES);
-  iCurrentScreen = 1;
+  initHUD();
+  updateHUD();
+  Z_switchScreen();
+  memcopy(Z_getWorkingScreenAddress(), Z_getVisibleScreenAddress(), RADAS_SCREEN_NUM_BYTES);  
   sprites_init();
+  
+  Z_setPalette( paleta );
+  Z_setPaletteOffset( PAL_TILESET_Spaceship, 10 );
 }
 
 void gameScreenExit(){
 	clear_timeouts();
-  sprites_destroy_all();
+	sprites_destroy_all();
 }

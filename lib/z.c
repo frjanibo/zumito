@@ -3,6 +3,9 @@ void __FASTCALL__ Z_InitEngine() {
         Z_SpritesList = adt_ListCreate();
         init_timeout_system();
 }
+
+
+
 struct adt_List* Z_getSpritesList(){
         return Z_SpritesList;
 }
@@ -24,9 +27,10 @@ void __FASTCALL__ wait_int (void)
 	#endasm
 }
 
-unsigned long VAR_FRAMES = 23672;
-unsigned long ZX_Uno_t = 0UL;
-unsigned long __FASTCALL__ millis() {
+#define VAR_FRAMES ((unsigned char *)23672)
+
+unsigned int ZX_Uno_t = 0UL;
+unsigned int __FASTCALL__ millis() {
         // Note: this is a not exact simplification
         // Should be ticks(50 Hz) * 20 ms = 1000 ms,
         // But it is simplified to ticks(50 Hz) * 16 = 800 ms
@@ -44,14 +48,15 @@ void __FASTCALL__ Z_setPalette( unsigned char *pal ) {
         }
 }
 
-void Z_setPaletteOffset( uchar* pal, uchar offset ) {
-  for(; offset<16; offset++) {
-          outp(0xBF3B, offset);
-          outp(0xFF3B, *(pal+offset) );
+void Z_setPaletteOffset( unsigned char* pal, unsigned char offset ) {
+  while(offset<16) {
+		offset++;
+        outp(0xBF3B, offset);
+        outp(0xFF3B, *(pal+offset) );
   }
 }
 
-void Z_exchangePaletteColors( uchar* pal, uchar a, uchar b ) {
+void Z_exchangePaletteColors( unsigned char* pal, unsigned char a, unsigned char b ) {
   unsigned char a_value, b_value;
   outp(0xBF3B, a);
   a_value = inp(0xFF3B);
@@ -83,8 +88,9 @@ unsigned char Z_paletteFadeout(){
 
       outp(0xFF3B, (r<<2) | (g<<5) |b);
       ret|= (r<<2) | (g<<5) | b;
+      
     }
-    
+    wait_int();
   } while(ret>0);
 }
 
@@ -108,13 +114,15 @@ void __FASTCALL__ Z_getActiveScreen() {
         return iCurrentScreen;
 }
 
-unsigned int* __FASTCALL__ Z_getWorkingScreenAddress() {
-  if( iCurrentScreen == 1) return RADAS_SCREEN_ADDR_1;
-  else return RADAS_SCREEN_ADDR_0;
+unsigned int __FASTCALL__ *Z_getWorkingScreenAddress() {
+  if(iCurrentScreen == 1) {
+	return RADAS_SCREEN_ADDR_1;
+  } else {
+	return RADAS_SCREEN_ADDR_0;
+  }
 }
 
-uchar __FASTCALL__ Z_getVisibleScreenAddress() {
-	
+unsigned int __FASTCALL__ *Z_getVisibleScreenAddress() {
   if( iCurrentScreen == 1) return RADAS_SCREEN_ADDR_0;
   else return RADAS_SCREEN_ADDR_1;
 }
@@ -125,7 +133,7 @@ void __FASTCALL__ Z_switchScreen() {
 }
 
 void Z_copyScreenToShadow(){
-  memcpy(Z_getWorkingScreenAddress(), Z_getVisibleScreenAddress(),  RADAS_SCREEN_NUM_BYTES);
+  memcopy(Z_getWorkingScreenAddress(), Z_getVisibleScreenAddress(),  RADAS_SCREEN_NUM_BYTES);
 }
 
 void Z_put_sprite (unsigned char *posicion, unsigned int x, unsigned int y, unsigned int w, unsigned int h)
@@ -500,6 +508,7 @@ void put_sprite_x8_even (unsigned char *posicion, unsigned char x, unsigned char
         // SALIDAS: se escribe en el mapa de pantalla
         // ADVERTENCIAS: no comprueba límites de pantalla
         // -------------------------------------------
+
   #asm
 		ld hl,2		; Pasamos la variable de entrada al acumulador
 		add hl,sp
@@ -541,7 +550,7 @@ void put_sprite_x8_even (unsigned char *posicion, unsigned char x, unsigned char
 		ld d, a		; d preparado, ya tenemos la posición en pantalla
 
 		ld b,8		; Indicamos que vamos a pintar 8 líneas
-		draw_fast:		; dibujamos 8 pixels (4 bytes)
+	draw_fast:		; dibujamos 8 pixels (4 bytes)
 		ld c,4		; Indicamos que vamos a pintar 4 pares de pixels
 		ldi
 		ldi
@@ -552,11 +561,9 @@ void put_sprite_x8_even (unsigned char *posicion, unsigned char x, unsigned char
 		ld e,a
 		jr nc, sigue_fast
 		inc d		; incrementamos D si sale acarrero al incrementar E en 64 bytes
-		sigue_fast:
-		djnz, draw_fast
-
+	sigue_fast:
+		djnz draw_fast
 		ret
-
   #endasm
 }
 
@@ -723,3 +730,30 @@ void fastcls (int color)
 		ei
   #endasm
 }
+
+void memcopy( uchar* destiny, uchar* origin, unsigned int size) {
+	while(size-- > 0) {
+		*(destiny+size) = *(origin+size);
+	}
+}
+
+char* itoa_10(unsigned int num, unsigned char* str, unsigned char digits)
+{
+    int i = 0;
+ 
+	for(i=0;i<digits; i++) str[i]='0';
+	str[i]='\0';
+	
+    if (num == 0) return str;
+  
+    // Process individual digits
+    while (num != 0)
+    {
+        int rem = num % 10;
+        str[--i] = rem + '0';
+        num = num/10;
+    }
+	return str;
+}
+
+

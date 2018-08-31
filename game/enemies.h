@@ -1,39 +1,50 @@
 extern Room* room;
+extern unsigned int CURRENT_WAVE;
 uchar ENEMIES_NUMBER = 0;
+
+uchar bee_speed = 38;
+uchar vermin_speed = 80;
+
+Sprite* createWeb(unsigned char, unsigned char);
+void RandomBehaviour(Sprite* s);
+void ChaserBehaviour(Sprite* s);
 
 signed char fast_dist(uchar x1, uchar y1, uchar x2, uchar y2) {
   return (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2);
 }
 
 unsigned char hit_enemy(Sprite* enemy, unsigned char damage){
-  if(enemy->life > 0) enemy->life-=damage;
+	if(damage > enemy->life) enemy->life=0;
+	else enemy->life -= damage;
+	
   if(enemy->life==0 && sprite_get_flag(enemy, SPRITE_DESTROY_F)==0) {
     sprite_set_flag(enemy, SPRITE_DESTROY_F, 1);
     sprite_safe_add( Explosion_new(enemy) );
-    if(enemy->id < ENEMY_WEB && ENEMIES_NUMBER>0) {
+    if(enemy->id & ENEMY_MORTAL_FLAG && ENEMIES_NUMBER>0) {
       ENEMIES_NUMBER--;
+      createRandomItem(enemy->x, enemy->y);
     }
-    return enemy_rewards[ (enemy->id>>4)-1 ];
+    return enemy_rewards[ (enemy->id>>4)-7 ];
   }
   if(enemy->id==ENEMY_WEB) enemy->frame=1;
   return 0;
 }
 
-void EnemyRandom_Update(Sprite);
-void EnemyChaser_Update(Sprite);
+void EnemyRandom_Update(Sprite*);
+void EnemyChaser_Update(Sprite*);
 Sprite* createBee(unsigned char, unsigned char);
 Sprite* createVermin(unsigned char, unsigned char);
 Sprite* createKnight(unsigned char, unsigned char);
 Sprite* createTank(unsigned char, unsigned char);
-void Bee_Update(Sprite);
-void Knight_Update(Sprite);
-void Tank_Update(Sprite);
+void Bee_Update(Sprite*);
+void Knight_Update(Sprite*);
+void Tank_Update(Sprite*);
 
 Sprite* createBee(unsigned char x, unsigned char y){
         Sprite* s = Sprite_new(x,y);
         s->id = ENEMY_BEE;
         s->direction = DIRECTION_UP;
-        s->speed = 1;
+        s->speed = 1 + (CURRENT_WAVE >> 3);
         s->anim = anim_bee[s->direction];
         s->customUpdateMethod = Bee_Update;
 
@@ -41,20 +52,19 @@ Sprite* createBee(unsigned char x, unsigned char y){
         return s;
 }
 
-void Bee_Update(Sprite s) {
-	
-  if(allEnemiesShouldStop) return;
-        sprite_anim(s,120);
-        if( sprite_clock_check(s,38) ) return;
-        RandomBehaviour(s);
-        s->anim = anim_bee[s->direction];
-        sprite_move(s);
-}
-
-void Vermin_Update(Sprite s) {
+void Bee_Update(Sprite* s) {
 	if(allEnemiesShouldStop) return;
 	sprite_anim(s,120);
-	if( sprite_clock_check(s,80) ) return;
+	if( sprite_clock_check(s,bee_speed - (CURRENT_WAVE>>1)) ) return;
+	RandomBehaviour(s);
+	s->anim = anim_bee[s->direction];
+	sprite_move(s);
+}
+
+void Vermin_Update(Sprite* s) {
+	if(allEnemiesShouldStop) return;
+	sprite_anim(s,120);
+	if( sprite_clock_check(s,vermin_speed - (CURRENT_WAVE>>1)) ) return;
 	RandomBehaviour(s);
 	s->anim = anim_vermin[s->direction];
 	
@@ -66,6 +76,7 @@ Sprite* createVermin(unsigned char x, unsigned char y){
         s->id = ENEMY_VERMIN;
         s->direction = DIRECTION_UP;
         s->speed = 1;
+        s->life = 1 + ( CURRENT_WAVE >> 2);
         s->anim = anim_vermin[s->direction];
         s->customUpdateMethod = Vermin_Update;
 
@@ -78,6 +89,7 @@ Sprite* createKnight(unsigned char x, unsigned char y){
 	s->id = ENEMY_KNIGHT;
 	s->direction = DIRECTION_UP;
 	s->speed = 1;
+	s->life = 1 + (CURRENT_WAVE >> 1);
 	s->anim = anim_knight[s->direction];
 	s->customUpdateMethod = Knight_Update;
 
@@ -85,7 +97,7 @@ Sprite* createKnight(unsigned char x, unsigned char y){
 	return s;
 }
 
-void Knight_Update(Sprite s) {
+void Knight_Update(Sprite* s) {
 	if(allEnemiesShouldStop) return;
   sprite_anim(s,120);
   if( sprite_clock_check(s,60) ) return;
@@ -99,7 +111,7 @@ void Knight_Update(Sprite s) {
 }
 
 
-void Tank_Update(Sprite s) {
+void Tank_Update(Sprite* s) {
   Sprite* web;
   if(allEnemiesShouldStop) return;
         sprite_anim(s,120);
@@ -109,7 +121,7 @@ void Tank_Update(Sprite s) {
         
         if( (rand()&31) == 0 ){
           if( sprites_count()<32 && Sprite_CollisionList( s, Z_getSpritesList(), ENEMY_WEB ) == NULL) {
-            web = createWeb(s->x,s->y);
+            web = (Sprite*)createWeb(s->x,s->y);
             if( web ) sprite_safe_add( web );
           }
         }
@@ -123,7 +135,7 @@ Sprite* createTank(unsigned char x, unsigned char y){
         s->direction = DIRECTION_UP;
         s->speed = 1;
         s->anim = anim_tank[s->direction];
-        s->life=4;
+        s->life=4 + CURRENT_WAVE;
         s->customUpdateMethod = Tank_Update;
 
         Sprite_refreshBlit(s);
@@ -140,7 +152,7 @@ Sprite* createWeb(unsigned char x, unsigned char y){
         s->direction = DIRECTION_UP;
         s->speed = 0;
         sprite_set_flag(s, SPRITE_STATIC_F, 1);
-        s->anim = anim_web;
+        s->anim = (Animation*)anim_web;
         s->customUpdateMethod = Web_Update;
         s->life=3;
 
@@ -156,13 +168,13 @@ void Egg_AnimationEnds(Sprite* s){
   Sprite* enemy;
   if(s->a==0) {
     // ponemos los frames del huevo rebotando
-    s->anim = anim_egg_bounce;
+    s->anim = (Animation*)anim_egg_bounce;
     s->a++;
   } else
   if(s->a==1) {
 	  if(s->b++ > 3){
 		  // ha terminado de rebotar
-		  s->anim = anim_egg_break;
+		  s->anim = (Animation*)anim_egg_break;
 		  s->a++;
 		  s->b=0;
 	  }
@@ -170,7 +182,7 @@ void Egg_AnimationEnds(Sprite* s){
   if( s->a==2 ) {
 	  // fin de la cita
 	  
-	  luck=((rand()&3)+1)<<4;
+	  luck=( (rand()&3)+ (ENEMY_VERMIN>>4) )<<4;
 		if(luck==ENEMY_VERMIN) enemy=createVermin(s->x, s->y);
 		else if(luck==ENEMY_KNIGHT) enemy=createKnight(s->x, s->y);
 		else if(luck==ENEMY_BEE) enemy=createBee(s->x, s->y);
@@ -191,7 +203,7 @@ Sprite* createEgg(unsigned char x, unsigned char y){
           s->direction = DIRECTION_UP;
           s->speed = 0;
           sprite_set_flag(s, SPRITE_STATIC_F, 1);
-          s->anim = anim_egg_appear;
+          s->anim = (Animation*)anim_egg_appear;
           s->customUpdateMethod = Egg_Update;
           s->onAnimationEnds = Egg_AnimationEnds;
           s->life=255;
@@ -202,7 +214,7 @@ Sprite* createEgg(unsigned char x, unsigned char y){
         return s;
 }
 
-void EnemyRandom_Update(Sprite s) {
+void EnemyRandom_Update(Sprite* s) {
 	if(allEnemiesShouldStop) return;
 	sprite_anim(s,120);
 	if( sprite_clock_check(s,60) ) return;
@@ -213,7 +225,7 @@ void EnemyRandom_Update(Sprite s) {
 }
 
 
-void RandomBehaviour(Sprite s) {
+void RandomBehaviour(Sprite* s) {
   unsigned char luck = rand();
   unsigned char cx = s->x >>3;
   unsigned char cy = s->y >>3;
@@ -265,7 +277,7 @@ void RandomBehaviour(Sprite s) {
   }
 }
 
-void ChaserBehaviour(Sprite s) {
+void ChaserBehaviour(Sprite* s) {
   unsigned char cx = s->x >>3;
   unsigned char cy = s->y >>3;
   unsigned char compass[4];
@@ -313,7 +325,7 @@ void ChaserBehaviour(Sprite s) {
 
 }
 
-void EnemyChaser_Update(Sprite s) {
+void EnemyChaser_Update(Sprite* s) {
 	if(allEnemiesShouldStop) return;
         sprite_anim(s,120);
         if( sprite_clock_check(s,60) ) { return; }

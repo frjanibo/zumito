@@ -2,13 +2,13 @@ uchar CURRENT_SCREEN = 0;
 uchar NEXT_SCREEN = 0;
 
 typedef struct {
-  uchar id;
+  unsigned char id;
   void (*loop)();
   void (*onEnter)();
   void (*onExit)();
 } Screen;
 
-Screen* Screen_new(uchar id, void(*loop)() ){
+Screen* Screen_new(unsigned char id, void(*loop)(void) ){
   Screen* s = malloc( sizeof(Screen) );
   s->id=id;
 
