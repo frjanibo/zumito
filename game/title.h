@@ -14,7 +14,7 @@ void introScreenExit(){
 }
 
 void introScreenUpdate(){
-        uchar i=0;
+        unsigned char i=0;
         unsigned long timer = 0L;
         uchar title_text_status = 0;
         uchar bgcolor = 1;
@@ -50,7 +50,7 @@ void introScreenUpdate(){
         Z_switchScreen();
         Z_copyScreenToShadow();
 		
-        for(i=0; i<28; i++) {
+        for(i=1; i<28; i+=2) {
                 Z_switchScreen();
                 Z_put_sprite(logo,32,14+(26-i), 64, i);
         }

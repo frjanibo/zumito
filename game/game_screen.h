@@ -34,7 +34,7 @@ void gameScreenEnter(){
   sprites_init();
   
   Z_setPalette( paleta );
-  Z_setPaletteOffset( PAL_TILESET_Spaceship, 10 );
+  Z_setPaletteOffset( PAL_TILESET_Rocks, 9 );
 }
 
 void gameScreenExit(){

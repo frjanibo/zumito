@@ -27,7 +27,7 @@ void __FASTCALL__ wait_int (void)
 	#endasm
 }
 
-#define VAR_FRAMES ((unsigned char *)23672)
+#define VAR_FRAMES ((unsigned int *)23672)
 
 unsigned int ZX_Uno_t = 0UL;
 unsigned int __FASTCALL__ millis() {
@@ -136,14 +136,10 @@ void Z_copyScreenToShadow(){
   memcopy(Z_getWorkingScreenAddress(), Z_getVisibleScreenAddress(),  RADAS_SCREEN_NUM_BYTES);
 }
 
-void Z_put_sprite (unsigned char *posicion, unsigned int x, unsigned int y, unsigned int w, unsigned int h)
+void Z_put_sprite (unsigned char *posicion, unsigned char x, unsigned char y, unsigned char w, unsigned char h)
 {
-	unsigned char *pantalla=Z_getWorkingScreenAddress() + (y*32);
-	unsigned int buffer;
-	unsigned int dibuja;
-	unsigned int a,b;
+	unsigned char *pantalla=Z_getWorkingScreenAddress() + (x>>1)+ (y*64);
 	unsigned int xx;
-  pantalla+= (x>>1);
 
 	while (h>0)
 	{

@@ -11,7 +11,7 @@ void init_timeout_system(){
 	Z_TimeoutList=adt_ListCreate();
 }
 
-void set_timeout(unsigned long delay, void *function, void *param ){
+void set_timeout(unsigned long delay, void(*function)(void), void *param ){
 	Timeout* timeout = malloc( sizeof(Timeout) );
 	timeout->time = millis() + delay;
 	timeout->timeout_function=function;
@@ -34,7 +34,7 @@ void __FASTCALL__ clear_timeouts(){
 
 void check_timeouts() {
 	struct adt_ListNode *position;
-	uchar state;
+	unsigned char state;
 	
 	unsigned long current_time = millis();
     Timeout *t = adt_ListFirst( Z_TimeoutList );
