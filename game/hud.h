@@ -1,5 +1,6 @@
 uint total, largest;
 unsigned char str[6];
+extern Sprite* player;
 
 void copyHud() {
 	if( Z_getActiveScreen() == 0 ){
@@ -27,11 +28,12 @@ void updateHUD(){
         //print( itoa_10(adt_ListCount(Z_getSpritesList()),str,2), 24, 90);
         mprint( "WAVE", 48,90, 6,1 );
         mprint( itoa_10(CURRENT_WAVE,str,2), 60, 90, 6,1);
-        //print( itoa_10( total, str,5), 44, 90);
+        
+        print( itoa_10( largest, str,5), 22, 90);
         
         copyHud();
         
-        set_timeout( 400UL, updateHUD, NULL );
+        set_timeout( 1000UL, updateHUD, NULL );
 }
 
 

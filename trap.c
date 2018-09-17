@@ -93,7 +93,7 @@ void main (void)
         // Variables globales
         //heapinit(HPSIZE);
         mallinit();
-        sbrk(55000, 1024*6);
+        sbrk(57671, 1024*4);
         Z_InitEngine();
 
         screens[0] = Screen_new(0, introScreenUpdate );
@@ -102,7 +102,7 @@ void main (void)
         screens[1]->onEnter = gameScreenEnter;
         screens[1]->onExit = gameScreenExit;
 
-        //Z_turboOn();
+        Z_turboOn();
         Z_radastanModeOn();
         Z_setPalette( paleta );   
         outp(254, 1); // border
